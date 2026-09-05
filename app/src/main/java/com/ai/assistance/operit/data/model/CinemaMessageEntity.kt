@@ -7,9 +7,8 @@ import androidx.room.PrimaryKey
 data class CinemaMessageEntity(
     @PrimaryKey
     val id: String,
-    val movieId: String? = null,
+    val movieId: String,
     val content: String,
-    val authorType: String, // "user" or "ai"
-    val timestamp: Long = System.currentTimeMillis(),
-    val videoTimestamp: Long? = null // 消息发送时的视频播放位置
+    val authorType: String,
+    val timestamp: Long
 )

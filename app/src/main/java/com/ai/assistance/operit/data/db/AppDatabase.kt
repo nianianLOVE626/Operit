@@ -8,24 +8,22 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ai.assistance.operit.data.dao.ChatContentDao
 import com.ai.assistance.operit.data.dao.ChatDao
+import com.ai.assistance.operit.data.dao.CustomEmojiDao
 import com.ai.assistance.operit.data.dao.MessageDao
 import com.ai.assistance.operit.data.dao.MessageVariantDao
-import com.ai.assistance.operit.data.dao.TokenUsageDao
 import com.ai.assistance.operit.data.model.ChatEntity
+import com.ai.assistance.operit.data.model.CustomEmojiEntity
 import com.ai.assistance.operit.data.model.MessageEntity
 import com.ai.assistance.operit.data.model.MessageVariantEntity
-import com.ai.assistance.operit.data.model.TokenStatsModelEntity
-import com.ai.assistance.operit.data.model.TokenUsageRecordEntity
 /** 应用数据库，包含聊天表和消息表 */
 @Database(
     entities = [
         ChatEntity::class,
         MessageEntity::class,
         MessageVariantEntity::class,
-        TokenUsageRecordEntity::class,
-        TokenStatsModelEntity::class,
+        CustomEmojiEntity::class,
     ],
-    version = 21,
+    version = 22,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -36,7 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun messageVariantDao(): MessageVariantDao
     abstract fun chatContentDao(): ChatContentDao
-    abstract fun tokenUsageDao(): TokenUsageDao
+    abstract fun customEmojiDao(): CustomEmojiDao
 
     companion object {
         @Volatile
@@ -332,6 +330,32 @@ abstract class AppDatabase : RoomDatabase() {
                 }
             }
 
+        /** v21 -> v22: Add custom emoji support, remove token statistics (精简功能) */
+        private val MIGRATION_21_22 =
+            object : Migration(21, 22) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 创建表情包表
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `custom_emojis` (
+                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            `imagePath` TEXT NOT NULL,
+                            `category` TEXT NOT NULL DEFAULT 'happy',
+                            `tags` TEXT NOT NULL DEFAULT '',
+                            `useCount` INTEGER NOT NULL DEFAULT 0,
+                            `isFavorite` INTEGER NOT NULL DEFAULT 0,
+                            `addedAt` INTEGER NOT NULL,
+                            `lastUsedAt` INTEGER
+                        )
+                        """.trimIndent()
+                    )
+                    
+                    // 删除Token统计相关表（精简功能）
+                    db.execSQL("DROP TABLE IF EXISTS `token_usage_records`")
+                    db.execSQL("DROP TABLE IF EXISTS `token_stats_models`")
+                }
+            }
+
         // 定义从版本2到3的迁移
         private val MIGRATION_2_3 =
             object : Migration(2, 3) {
@@ -449,7 +473,8 @@ abstract class AppDatabase : RoomDatabase() {
                                 MIGRATION_17_18,
                                 MIGRATION_18_19,
                                 MIGRATION_19_20,
-                                MIGRATION_20_21
+                                MIGRATION_20_21,
+                                MIGRATION_21_22
                             ) // 添加新的迁移
                             .build()
                     INSTANCE = instance

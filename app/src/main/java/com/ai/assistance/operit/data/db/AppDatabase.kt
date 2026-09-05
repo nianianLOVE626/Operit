@@ -9,6 +9,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ai.assistance.operit.data.dao.ChatContentDao
 import com.ai.assistance.operit.data.dao.ChatDao
 import com.ai.assistance.operit.data.dao.CustomEmojiDao
+import com.ai.assistance.operit.data.dao.MomentDao
+import com.ai.assistance.operit.data.dao.SongDao
+import com.ai.assistance.operit.data.dao.MovieDao
 import com.ai.assistance.operit.data.dao.MessageDao
 import com.ai.assistance.operit.data.dao.MessageVariantDao
 import com.ai.assistance.operit.data.model.ChatEntity
@@ -40,7 +43,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun messageVariantDao(): MessageVariantDao
     abstract fun chatContentDao(): ChatContentDao
+    
     abstract fun customEmojiDao(): CustomEmojiDao
+    abstract fun momentDao(): MomentDao
+    abstract fun songDao(): SongDao
+    abstract fun movieDao(): MovieDao
 
     companion object {
         @Volatile

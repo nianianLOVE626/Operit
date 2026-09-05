@@ -11,5 +11,5 @@ data class MovieEntity(
     val filePath: String,
     val duration: Long,
     val thumbnailPath: String?,
-    val currentPosition: Long = 0
+    val lastPosition: Long = 0  // 修复：改为 lastPosition
 )

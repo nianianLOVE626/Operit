@@ -5,8 +5,6 @@ import android.app.Activity
 import android.net.Uri
 import android.os.Build
 import com.ai.assistance.operit.util.AppLogger
-import com.ai.assistance.operit.R
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.compose.foundation.Image
@@ -27,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -46,10 +43,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
-import com.ai.assistance.operit.data.model.ActivePrompt
-import com.ai.assistance.operit.data.preferences.ActivePromptManager
-import com.ai.assistance.operit.data.preferences.CharacterCardManager
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
+import com.ai.assistance.operit.data.preferences.UserPreferencesManager.Companion.ON_COLOR_MODE_AUTO
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager.Companion.ON_COLOR_MODE_DARK
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager.Companion.ON_COLOR_MODE_LIGHT
 import com.google.android.exoplayer2.DefaultLoadControl
@@ -63,29 +58,34 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import io.github.fletchmckee.liquid.liquefiable
-import io.github.fletchmckee.liquid.rememberLiquidState
 
 private val DarkColorScheme =
-        darkColorScheme(primary = Purple80, secondary = PurpleGrey80, tertiary = Pink80)
+        darkColorScheme(
+            primary = Primary80,
+            secondary = Secondary80,
+            tertiary = Tertiary80,
+            surface = SurfaceDark,
+            surfaceVariant = SurfaceVariantDark,
+            onSurface = OnSurfaceDark,
+            onSurfaceVariant = OnSurfaceDark
+        )
 
 private val LightColorScheme =
         lightColorScheme(
-                primary = Purple40,
-                secondary = PurpleGrey40,
-                tertiary = Pink40,
-
-                /* Other default colors to override
-                background = Color(0xFFFFFBFE),
-                surface = Color(0xFFFFFBFE),
+                primary = Primary40,
+                secondary = Secondary40,
+                tertiary = Tertiary40,
+                background = Surface,
+                surface = Surface,
+                surfaceVariant = SurfaceVariant,
                 onPrimary = Color.White,
                 onSecondary = Color.White,
                 onTertiary = Color.White,
-                onBackground = Color(0xFF1C1B1F),
-                onSurface = Color(0xFF1C1B1F),
-                */
+                onBackground = OnSurface,
+                onSurface = OnSurface,
+                onSurfaceVariant = OnSurfaceVariant,
+                outline = Outline,
+                outlineVariant = OutlineVariant
                 )
 
 
@@ -93,44 +93,56 @@ private val LightColorScheme =
 @Composable
 fun OperitTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current
-    val activePromptManager = remember { ActivePromptManager.getInstance(context) }
+    val preferencesManager = remember { UserPreferencesManager.getInstance(context) }
     val coroutineScope = rememberCoroutineScope()
-    val activePrompt by activePromptManager.activePromptFlow.collectAsState(
-        initial = ActivePrompt.CharacterCard(CharacterCardManager.DEFAULT_CHARACTER_CARD_ID),
-    )
-    val themeSnapshot = rememberActiveThemePreferenceSnapshot()
 
-    fun disableBackgroundForTarget(target: ActivePrompt) {
-        coroutineScope.launch {
-            activePromptManager.mutateActiveThemeForPrompt(target) { values ->
-                values.withBoolean("use_background_image", false)
-            }
-        }
-    }
+    // 获取主题设置
+    val useSystemTheme by preferencesManager.useSystemTheme.collectAsState(initial = true)
+    val themeMode by
+            preferencesManager.themeMode.collectAsState(
+                    initial = UserPreferencesManager.THEME_MODE_LIGHT
+            )
+    val useCustomColors by preferencesManager.useCustomColors.collectAsState(initial = false)
+    val customPrimaryColor by preferencesManager.customPrimaryColor.collectAsState(initial = null)
+    val customSecondaryColor by
+            preferencesManager.customSecondaryColor.collectAsState(initial = null)
+    val onColorMode by preferencesManager.onColorMode.collectAsState(initial = ON_COLOR_MODE_AUTO)
 
-    val useSystemTheme = themeSnapshot.useSystemTheme
-    val themeMode = themeSnapshot.themeMode
-    val useCustomColors = themeSnapshot.useCustomColors
-    val customPrimaryColor = themeSnapshot.customPrimaryColor
-    val customSecondaryColor = themeSnapshot.customSecondaryColor
-    val onColorMode = themeSnapshot.onColorMode
-    val useBackgroundImage = themeSnapshot.useBackgroundImage
-    val backgroundImageUri = themeSnapshot.backgroundImageUri
-    val backgroundImageOpacity = themeSnapshot.backgroundImageOpacity
-    val backgroundMediaType = themeSnapshot.backgroundMediaType
-    val videoBackgroundMuted = themeSnapshot.videoBackgroundMuted
-    val videoBackgroundLoop = themeSnapshot.videoBackgroundLoop
-    val useCustomStatusBarColor = themeSnapshot.useCustomStatusBarColor
-    val customStatusBarColorValue = themeSnapshot.customStatusBarColor
-    val statusBarTransparent = themeSnapshot.statusBarTransparent
-    val statusBarHidden = themeSnapshot.statusBarHidden
-    val useBackgroundBlur = themeSnapshot.useBackgroundBlur
-    val backgroundBlurRadius = themeSnapshot.backgroundBlurRadius
-    val useCustomFont = themeSnapshot.useCustomFont
-    val fontType = themeSnapshot.fontType
-    val systemFontName = themeSnapshot.systemFontName
-    val customFontPath = themeSnapshot.customFontPath
-    val fontScale = themeSnapshot.fontScale
+    // 获取背景图片设置
+    val useBackgroundImage by preferencesManager.useBackgroundImage.collectAsState(initial = false)
+    val backgroundImageUri by preferencesManager.backgroundImageUri.collectAsState(initial = null)
+    val backgroundImageOpacity by
+            preferencesManager.backgroundImageOpacity.collectAsState(initial = 0.3f)
+
+    // 获取背景媒体类型和视频设置
+    val backgroundMediaType by
+            preferencesManager.backgroundMediaType.collectAsState(
+                    initial = UserPreferencesManager.MEDIA_TYPE_IMAGE
+            )
+    val videoBackgroundMuted by
+            preferencesManager.videoBackgroundMuted.collectAsState(initial = true)
+    val videoBackgroundLoop by preferencesManager.videoBackgroundLoop.collectAsState(initial = true)
+
+    // 获取状态栏颜色设置
+    val useCustomStatusBarColor by
+            preferencesManager.useCustomStatusBarColor.collectAsState(initial = false)
+    val customStatusBarColorValue by
+            preferencesManager.customStatusBarColor.collectAsState(initial = null)
+    val statusBarTransparent by
+            preferencesManager.statusBarTransparent.collectAsState(initial = false)
+    val statusBarHidden by
+            preferencesManager.statusBarHidden.collectAsState(initial = false)
+
+    // 获取背景模糊设置
+    val useBackgroundBlur by preferencesManager.useBackgroundBlur.collectAsState(initial = false)
+    val backgroundBlurRadius by preferencesManager.backgroundBlurRadius.collectAsState(initial = 10f)
+
+    // 获取字体设置
+    val useCustomFont by preferencesManager.useCustomFont.collectAsState(initial = false)
+    val fontType by preferencesManager.fontType.collectAsState(initial = UserPreferencesManager.FONT_TYPE_SYSTEM)
+    val systemFontName by preferencesManager.systemFontName.collectAsState(initial = UserPreferencesManager.SYSTEM_FONT_DEFAULT)
+    val customFontPath by preferencesManager.customFontPath.collectAsState(initial = null)
+    val fontScale by preferencesManager.fontScale.collectAsState(initial = 1.0f)
 
     // 创建自定义 Typography
     val customTypography = remember(useCustomFont, fontType, systemFontName, customFontPath, fontScale) {
@@ -292,7 +304,12 @@ fun OperitTheme(content: @Composable () -> Unit) {
                                             "Error loading video background: ${e.message}",
                                             e
                                     )
-                                    disableBackgroundForTarget(activePrompt)
+                                    // Fallback to no background if video can't be loaded
+                                    coroutineScope.launch {
+                                        preferencesManager.saveThemeSettings(
+                                                useBackgroundImage = false
+                                        )
+                                    }
                                 }
                             }
                 } else {
@@ -336,184 +353,163 @@ fun OperitTheme(content: @Composable () -> Unit) {
 
     // 应用主题和自定义背景
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val liquidGlassBackdrop = rememberLayerBackdrop()
-        val waterGlassState = if (isWaterGlassSupported()) rememberLiquidState() else null
-
-        CompositionLocalProvider(
-            LocalThemePreferenceSnapshot provides themeSnapshot,
-            LocalLiquidGlassBackdrop provides liquidGlassBackdrop,
-            LocalWaterGlassState provides waterGlassState,
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize().layerBackdrop(liquidGlassBackdrop)
-            ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .background(if (darkTheme) Color.Black else Color.White)
-                            .then(
-                                if (waterGlassState != null) {
-                                    Modifier.liquefiable(waterGlassState)
-                                } else {
-                                    Modifier
-                                },
-                            )
-                )
-
-                if (useBackgroundImage && backgroundImageUri != null) {
-                    val uri = Uri.parse(backgroundImageUri)
-
-                    if (backgroundMediaType == UserPreferencesManager.MEDIA_TYPE_IMAGE) {
-                        val painter =
-                            rememberAsyncImagePainter(
-                                model = uri,
-                                error =
-                                    rememberAsyncImagePainter(
+        // First, create a solid barrier background to prevent system theme colors from showing
+        // through
+        Box(
+                modifier =
+                        Modifier.fillMaxSize()
+                                .background(
                                         if (darkTheme) Color.Black else Color.White
-                                    ),
+                                ) // Solid barrier background
+        )
+
+        // 如果使用背景图片且URI不为空，则显示背景图片
+        if (useBackgroundImage && backgroundImageUri != null) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                val uri = Uri.parse(backgroundImageUri)
+                val coroutineScope = rememberCoroutineScope()
+
+                // 根据媒体类型显示不同的背景
+                if (backgroundMediaType == UserPreferencesManager.MEDIA_TYPE_IMAGE) {
+                    // 显示背景图片
+                    val painter =
+                            rememberAsyncImagePainter(
+                                    model = uri,
+                                    error =
+                                            rememberAsyncImagePainter(
+                                                    if (darkTheme) Color.Black
+                                                    else Color.White // Use solid colors for
+                                                    // error fallback
+                                                    )
                             )
 
-                        LaunchedEffect(painter) {
-                            if (painter.state is AsyncImagePainter.State.Error) {
-                                AppLogger.e(
+                    // 监听图片加载失败时的逻辑
+                    LaunchedEffect(painter) {
+                        if (painter.state is AsyncImagePainter.State.Error) {
+                            AppLogger.e(
                                     "OperitTheme",
-                                    "Error loading background image from URI: $backgroundImageUri",
-                                )
+                                    "Error loading background image from URI: $backgroundImageUri"
+                            )
 
-                                if (uri.scheme == "file") {
-                                    val file = uri.path?.let { File(it) }
-                                    if (file == null || !file.exists()) {
-                                        AppLogger.e(
+                            // Check if it's a file:// URI pointing to our internal storage
+                            if (uri.scheme == "file") {
+                                val file = uri.path?.let { File(it) }
+                                if (file == null || !file.exists()) {
+                                    AppLogger.e(
                                             "OperitTheme",
-                                            "Internal file doesn't exist: ${file?.absolutePath}",
-                                        )
-                                    } else {
-                                        AppLogger.e(
+                                            "Internal file doesn't exist: ${file?.absolutePath}"
+                                    )
+                                } else {
+                                    AppLogger.e(
                                             "OperitTheme",
-                                            "File exists but couldn't be loaded: ${file.absolutePath}, size: ${file.length()}",
-                                        )
-                                    }
+                                            "File exists but couldn't be loaded: ${file.absolutePath}, size: ${file.length()}"
+                                    )
                                 }
+                            }
 
-                                disableBackgroundForTarget(activePrompt)
+                            coroutineScope.launch {
+                                preferencesManager.saveThemeSettings(useBackgroundImage = false)
                             }
                         }
+                    }
 
-                        Image(
+                    // 显示背景图片
+                    Image(
                             painter = painter,
                             contentDescription = "Background Image",
                             modifier =
-                                Modifier.fillMaxSize()
-                                    .alpha(backgroundImageOpacity)
-                                    .then(
-                                        if (useBackgroundBlur) {
-                                            Modifier.blur(radius = backgroundBlurRadius.dp)
-                                        } else {
-                                            Modifier
-                                        },
-                                    ).then(
-                                        if (waterGlassState != null) {
-                                            Modifier.liquefiable(waterGlassState)
-                                        } else {
-                                            Modifier
-                                        },
-                                    ),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        exoPlayer?.let { player ->
-                            val videoBackgroundColor =
-                                if (darkTheme) {
-                                    android.graphics.Color.BLACK
-                                } else {
-                                    android.graphics.Color.WHITE
-                                }
-                            AndroidView(
+                                    Modifier.fillMaxSize()
+                                            .alpha(backgroundImageOpacity) // 使用设置的不透明度
+                                            .then(
+                                                    if (useBackgroundBlur)
+                                                            Modifier.blur(radius = backgroundBlurRadius.dp)
+                                                    else Modifier
+                                            ),
+                            contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // 显示背景视频
+                    exoPlayer?.let { player ->
+                        AndroidView(
                                 factory = { ctx ->
-                                    (LayoutInflater.from(ctx).inflate(
-                                        R.layout.view_background_texture_player,
-                                        null,
-                                        false,
-                                    ) as StyledPlayerView).apply {
+                                    StyledPlayerView(ctx).apply {
                                         this.player = player
                                         useController = false
                                         layoutParams =
-                                            ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                                                ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                                        // Set scale type to fill the view without distortion
                                         resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                        setBackgroundColor(videoBackgroundColor)
-                                        setShutterBackgroundColor(videoBackgroundColor)
-                                        setKeepContentOnPlayerReset(true)
+                                        // Apply background color matching the current theme
+                                        setBackgroundColor(
+                                                if (darkTheme) android.graphics.Color.BLACK
+                                                else android.graphics.Color.WHITE
+                                        )
+                                        // Create a semi-transparent overlay to control opacity
                                         foreground =
-                                            android.graphics.drawable.ColorDrawable(
-                                                android.graphics.Color.argb(
-                                                    ((1f - backgroundImageOpacity) * 255).toInt(),
-                                                    if (darkTheme) 0 else 255,
-                                                    if (darkTheme) 0 else 255,
-                                                    if (darkTheme) 0 else 255,
+                                                android.graphics.drawable.ColorDrawable(
+                                                        android.graphics.Color.argb(
+                                                                ((1f - backgroundImageOpacity) *
+                                                                                255)
+                                                                        .toInt(),
+                                                                if (darkTheme) 0 else 255, // R: Black(0) or White(255)
+                                                                if (darkTheme) 0 else 255, // G: Black(0) or White(255)
+                                                                if (darkTheme) 0 else 255  // B: Black(0) or White(255)
+                                                        )
                                                 )
-                                            )
                                     }
                                 },
                                 update = { view ->
+                                    // Update player reference if needed
                                     if (view.player != player) {
                                         view.player = player
                                     }
 
-                                    view.setBackgroundColor(videoBackgroundColor)
-                                    view.setShutterBackgroundColor(videoBackgroundColor)
-                                    view.setKeepContentOnPlayerReset(true)
+                                    // Update the foreground transparency when opacity changes
                                     view.foreground =
-                                        android.graphics.drawable.ColorDrawable(
-                                            android.graphics.Color.argb(
-                                                ((1f - backgroundImageOpacity) * 255).toInt(),
-                                                if (darkTheme) 0 else 255,
-                                                if (darkTheme) 0 else 255,
-                                                if (darkTheme) 0 else 255,
+                                            android.graphics.drawable.ColorDrawable(
+                                                    android.graphics.Color.argb(
+                                                            ((1f - backgroundImageOpacity) * 255)
+                                                                    .toInt(),
+                                                            if (darkTheme) 0 else 255, // R: Black(0) or White(255)
+                                                            if (darkTheme) 0 else 255, // G: Black(0) or White(255)
+                                                            if (darkTheme) 0 else 255  // B: Black(0) or White(255)
+                                                    )
                                             )
-                                        )
                                 },
-                                modifier =
-                                    Modifier.fillMaxSize().then(
-                                        if (waterGlassState != null) {
-                                            Modifier.liquefiable(waterGlassState)
-                                        } else {
-                                            Modifier
-                                        },
-                                    ),
-                            )
-                        }
+                                modifier = Modifier.fillMaxSize()
+                        )
                     }
                 }
-            }
 
-            if (useBackgroundImage && backgroundImageUri != null) {
+                // 内容层 - Make sure it's not transparent
                 MaterialTheme(
-                    colorScheme =
-                        colorScheme.copy(
-                            surface = colorScheme.surface.copy(alpha = 1f),
-                            surfaceVariant = colorScheme.surfaceVariant.copy(alpha = 1f),
-                            background = colorScheme.background.copy(alpha = 1f),
-                            surfaceContainer = colorScheme.surfaceContainer.copy(alpha = 1f),
-                            surfaceContainerHigh =
-                                colorScheme.surfaceContainerHigh.copy(alpha = 1f),
-                            surfaceContainerHighest =
-                                colorScheme.surfaceContainerHighest.copy(alpha = 1f),
-                            surfaceContainerLow =
-                                colorScheme.surfaceContainerLow.copy(alpha = 1f),
-                            surfaceContainerLowest =
-                                colorScheme.surfaceContainerLowest.copy(alpha = 1f),
-                        ),
-                    typography = customTypography,
-                    content = content,
-                )
-            } else {
-                MaterialTheme(
-                    colorScheme = colorScheme,
-                    typography = customTypography,
-                    content = content,
+                        colorScheme =
+                                colorScheme.copy(
+                                        // Make surfaces more opaque
+                                        surface = colorScheme.surface.copy(alpha = 1f),
+                                        surfaceVariant =
+                                                colorScheme.surfaceVariant.copy(alpha = 1f),
+                                        background = colorScheme.background.copy(alpha = 1f),
+                                        surfaceContainer =
+                                                colorScheme.surfaceContainer.copy(alpha = 1f),
+                                        surfaceContainerHigh =
+                                                colorScheme.surfaceContainerHigh.copy(alpha = 1f),
+                                        surfaceContainerHighest =
+                                                colorScheme.surfaceContainerHighest.copy(
+                                                        alpha = 1f
+                                                ),
+                                        surfaceContainerLow =
+                                                colorScheme.surfaceContainerLow.copy(alpha = 1f),
+                                        surfaceContainerLowest =
+                                                colorScheme.surfaceContainerLowest.copy(alpha = 1f)
+                                ),
+                        typography = customTypography,
+                        content = content
                 )
             }
+        } else {
+            // 不使用背景图片时，直接应用主题
+            MaterialTheme(colorScheme = colorScheme, typography = customTypography, content = content)
         }
     }
 }

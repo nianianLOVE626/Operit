@@ -13,6 +13,12 @@ import com.ai.assistance.operit.data.dao.MessageDao
 import com.ai.assistance.operit.data.dao.MessageVariantDao
 import com.ai.assistance.operit.data.model.ChatEntity
 import com.ai.assistance.operit.data.model.CustomEmojiEntity
+import com.ai.assistance.operit.data.model.SongEntity
+import com.ai.assistance.operit.data.model.MovieEntity
+import com.ai.assistance.operit.data.model.CinemaMessageEntity
+import com.ai.assistance.operit.data.model.CoReadingMessageEntity
+import com.ai.assistance.operit.data.model.MomentEntity
+import com.ai.assistance.operit.data.model.MomentCommentEntity
 import com.ai.assistance.operit.data.model.MessageEntity
 import com.ai.assistance.operit.data.model.MessageVariantEntity
 /** 应用数据库，包含聊天表和消息表 */

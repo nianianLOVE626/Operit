@@ -7,10 +7,8 @@ import androidx.room.PrimaryKey
 data class CoReadingMessageEntity(
     @PrimaryKey
     val id: String,
-    val bookId: String? = null,
+    val bookId: String,  // 注意：是bookId不是sessionId！
     val content: String,
-    val authorType: String, // "user" or "ai"
-    val pageNumber: Int,
-    val timestamp: Long = System.currentTimeMillis(),
-    val highlightText: String? = null // 引用的书中文字
+    val authorType: String,
+    val timestamp: Long
 )

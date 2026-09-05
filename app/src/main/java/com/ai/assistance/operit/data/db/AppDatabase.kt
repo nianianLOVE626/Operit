@@ -31,8 +31,14 @@ import com.ai.assistance.operit.data.model.MessageVariantEntity
         MessageEntity::class,
         MessageVariantEntity::class,
         CustomEmojiEntity::class,
+        SongEntity::class,
+        MovieEntity::class,
+        CinemaMessageEntity::class,
+        CoReadingMessageEntity::class,
+        MomentEntity::class,
+        MomentCommentEntity::class
     ],
-    version = 22,
+    version = 23,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -369,6 +375,85 @@ abstract class AppDatabase : RoomDatabase() {
                 }
             }
 
+        /** v22 -> v23: Add new features - music, cinema, reading, moments */
+        private val MIGRATION_22_23 =
+            object : Migration(22, 23) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 创建songs表
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS songs (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            title TEXT NOT NULL,
+                            artist TEXT NOT NULL,
+                            filePath TEXT NOT NULL,
+                            duration INTEGER NOT NULL,
+                            coverArtPath TEXT
+                        )
+                    """)
+                    
+                    // 创建movies表
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS movies (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            title TEXT NOT NULL,
+                            filePath TEXT NOT NULL,
+                            duration INTEGER NOT NULL,
+                            thumbnailPath TEXT,
+                            currentPosition INTEGER NOT NULL DEFAULT 0
+                        )
+                    """)
+                    
+                    // 创建cinema_messages表
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS cinema_messages (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            movieId TEXT NOT NULL,
+                            content TEXT NOT NULL,
+                            authorType TEXT NOT NULL,
+                            timestamp INTEGER NOT NULL
+                        )
+                    """)
+                    
+                    // 创建coreading_messages表
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS coreading_messages (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            bookId TEXT NOT NULL,
+                            content TEXT NOT NULL,
+                            authorType TEXT NOT NULL,
+                            timestamp INTEGER NOT NULL
+                        )
+                    """)
+                    
+                    // 创建moments表
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS moments (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            content TEXT NOT NULL,
+                            imageUrls TEXT NOT NULL,
+                            authorType TEXT NOT NULL,
+                            timestamp INTEGER NOT NULL,
+                            isLikedByUser INTEGER NOT NULL DEFAULT 0,
+                            isLikedByAi INTEGER NOT NULL DEFAULT 0
+                        )
+                    """)
+                    
+                    // 创建moment_comments表
+                    db.execSQL("""
+                        CREATE TABLE IF NOT EXISTS moment_comments (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            momentId TEXT NOT NULL,
+                            content TEXT NOT NULL,
+                            authorType TEXT NOT NULL,
+                            replyToCommentId TEXT,
+                            delayMinutes INTEGER NOT NULL DEFAULT 0,
+                            timestamp INTEGER NOT NULL,
+                            isVisible INTEGER NOT NULL DEFAULT 1
+                        )
+                    """)
+                }
+            }
+
         // 定义从版本2到3的迁移
         private val MIGRATION_2_3 =
             object : Migration(2, 3) {
@@ -487,7 +572,8 @@ abstract class AppDatabase : RoomDatabase() {
                                 MIGRATION_18_19,
                                 MIGRATION_19_20,
                                 MIGRATION_20_21,
-                                MIGRATION_21_22
+                                MIGRATION_21_22,
+                                MIGRATION_22_23
                             ) // 添加新的迁移
                             .build()
                     INSTANCE = instance

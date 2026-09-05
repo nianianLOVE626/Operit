@@ -9,9 +9,9 @@ data class MomentCommentEntity(
     val id: String,
     val momentId: String,
     val content: String,
-    val authorType: String, // "user" or "ai"
-    val replyToCommentId: String? = null, // 回复哪条评论
-    val delayMinutes: Int = 0, // 延迟几分钟后显示
-    val timestamp: Long = System.currentTimeMillis(),
-    val isVisible: Boolean = true // 延迟评论在时间到之前不可见
+    val authorType: String,
+    val replyToCommentId: String? = null,
+    val delayMinutes: Int = 0,
+    val timestamp: Long,
+    val isVisible: Boolean = true
 )

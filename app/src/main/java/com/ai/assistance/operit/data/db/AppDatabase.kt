@@ -54,6 +54,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun momentDao(): MomentDao
     abstract fun songDao(): SongDao
     abstract fun movieDao(): MovieDao
+    abstract fun cinemaMessageDao(): CinemaMessageDao
+    abstract fun coReadingMessageDao(): CoReadingMessageDao
+    abstract fun momentCommentDao(): MomentCommentDao
 
     companion object {
         @Volatile

@@ -58,6 +58,15 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun coReadingMessageDao(): CoReadingMessageDao
     abstract fun momentCommentDao(): MomentCommentDao
 
+
+    // 新增功能的DAO方法
+    abstract fun songDao(): SongDao
+    abstract fun movieDao(): MovieDao
+    abstract fun cinemaMessageDao(): CinemaMessageDao
+    abstract fun coReadingMessageDao(): CoReadingMessageDao
+    abstract fun momentDao(): MomentDao
+    abstract fun momentCommentDao(): MomentCommentDao
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null

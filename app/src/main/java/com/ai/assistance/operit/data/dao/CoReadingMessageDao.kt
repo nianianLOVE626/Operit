@@ -6,14 +6,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CoReadingMessageDao {
-    @Query("SELECT * FROM coreading_messages WHERE sessionId = :sessionId ORDER BY timestamp ASC")
-    fun getMessagesBySession(sessionId: String): Flow<List<CoReadingMessageEntity>>
+    @Query("SELECT * FROM coreading_messages WHERE bookId = :bookId ORDER BY timestamp ASC")
+    fun getMessagesByBook(bookId: String): Flow<List<CoReadingMessageEntity>>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: CoReadingMessageEntity)
     
-    @Query("DELETE FROM coreading_messages WHERE sessionId = :sessionId")
-    suspend fun deleteMessagesBySession(sessionId: String)
+    @Query("DELETE FROM coreading_messages WHERE bookId = :bookId")
+    suspend fun deleteMessagesByBook(bookId: String)
     
     @Query("DELETE FROM coreading_messages")
     suspend fun deleteAll()

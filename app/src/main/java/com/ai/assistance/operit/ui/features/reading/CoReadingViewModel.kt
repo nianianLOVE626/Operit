@@ -3,6 +3,7 @@ package com.ai.assistance.operit.ui.features.reading
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ai.assistance.operit.data.model.CoReadingMessageEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,6 +23,9 @@ class CoReadingViewModel(application: Application) : AndroidViewModel(applicatio
     private val _isSyncing = MutableStateFlow(false)
     val isSyncing: StateFlow<Boolean> = _isSyncing
     
+    private val _currentBookId = MutableStateFlow("")
+    val currentBookId: StateFlow<String> = _currentBookId
+    
     fun previousPage() {
         if (_currentPage.value > 1) {
             _currentPage.value--
@@ -40,9 +44,9 @@ class CoReadingViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             val message = CoReadingMessageEntity(
                 id = UUID.randomUUID().toString(),
+                bookId = _currentBookId.value,  // ✅ 修复：使用bookId
                 content = content,
                 authorType = "user",
-                pageNumber = _currentPage.value,
                 timestamp = System.currentTimeMillis()
             )
             _messages.value = _messages.value + message
@@ -60,6 +64,9 @@ class CoReadingViewModel(application: Application) : AndroidViewModel(applicatio
     
     fun openFile(filePath: String) {
         viewModelScope.launch {
+            // 使用文件路径作为bookId
+            _currentBookId.value = filePath
+            
             // TODO: 打开PDF/EPUB文件
             // TODO: 解析总页数
         }

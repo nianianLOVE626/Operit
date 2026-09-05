@@ -10,10 +10,6 @@ data class SongEntity(
     val title: String,
     val artist: String,
     val filePath: String,
-    val duration: Long, // 毫秒
-    val album: String? = null,
-    val coverArtPath: String? = null,
-    val addedAt: Long = System.currentTimeMillis(),
-    val playCount: Int = 0,
-    val isFavorite: Boolean = false
+    val duration: Long,
+    val coverArtPath: String?
 )

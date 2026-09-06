@@ -14,6 +14,9 @@ import com.ai.assistance.operit.data.dao.SongDao
 import com.ai.assistance.operit.data.dao.MovieDao
 import com.ai.assistance.operit.data.dao.MessageDao
 import com.ai.assistance.operit.data.dao.MessageVariantDao
+import com.ai.assistance.operit.data.dao.CinemaMessageDao
+import com.ai.assistance.operit.data.dao.CoReadingMessageDao
+import com.ai.assistance.operit.data.dao.MomentCommentDao
 import com.ai.assistance.operit.data.model.ChatEntity
 import com.ai.assistance.operit.data.model.CustomEmojiEntity
 import com.ai.assistance.operit.data.model.SongEntity
@@ -58,14 +61,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun coReadingMessageDao(): CoReadingMessageDao
     abstract fun momentCommentDao(): MomentCommentDao
 
-
-    // 新增功能的DAO方法
-    abstract fun songDao(): SongDao
-    abstract fun movieDao(): MovieDao
-    abstract fun cinemaMessageDao(): CinemaMessageDao
-    abstract fun coReadingMessageDao(): CoReadingMessageDao
-    abstract fun momentDao(): MomentDao
-    abstract fun momentCommentDao(): MomentCommentDao
 
     companion object {
         @Volatile

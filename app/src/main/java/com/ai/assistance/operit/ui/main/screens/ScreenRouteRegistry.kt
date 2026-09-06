@@ -366,6 +366,10 @@ object ScreenRouteRegistry {
                 entryId = "hidden.chat_history_settings",
                 screen = Screen.ChatHistorySettings,
                 launchNavItem = NavItem.ChatHistorySettings
+            ),
+            hostEntryDefinition(
+                entryId = "hidden.bubble_theme",
+                screen = Screen.BubbleTheme
             )
         )
 

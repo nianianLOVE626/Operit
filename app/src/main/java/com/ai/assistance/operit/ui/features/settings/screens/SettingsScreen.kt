@@ -54,7 +54,8 @@ fun SettingsScreen(
         navigateToWaifuModeSettings: () -> Unit,
         navigateToTokenUsageStatistics: () -> Unit,
         navigateToContextSummarySettings: () -> Unit,
-        navigateToLayoutAdjustmentSettings: () -> Unit
+        navigateToLayoutAdjustmentSettings: () -> Unit,
+        navigateToBubbleTheme: () -> Unit = {}
 ) {
         val context = LocalContext.current
         val githubAuth = remember { GitHubAuthPreferences.getInstance(context) }
@@ -161,6 +162,13 @@ fun SettingsScreen(
                                 subtitle = stringResource(R.string.settings_global_display_subtitle),
                                 icon = Icons.Default.Visibility,
                                 onClick = navigateToGlobalDisplaySettings
+                        )
+
+                        CompactSettingsItem(
+                                title = "气泡皮肤",
+                                subtitle = "选择聊天气泡样式",
+                                icon = Icons.Default.ChatBubble,
+                                onClick = navigateToBubbleTheme
                         )
                         
                         CompactSettingsItem(

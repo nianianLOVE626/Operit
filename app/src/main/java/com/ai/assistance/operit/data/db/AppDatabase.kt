@@ -8,40 +8,24 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ai.assistance.operit.data.dao.ChatContentDao
 import com.ai.assistance.operit.data.dao.ChatDao
-import com.ai.assistance.operit.data.dao.CustomEmojiDao
-import com.ai.assistance.operit.data.dao.MomentDao
-import com.ai.assistance.operit.data.dao.SongDao
-import com.ai.assistance.operit.data.dao.MovieDao
 import com.ai.assistance.operit.data.dao.MessageDao
 import com.ai.assistance.operit.data.dao.MessageVariantDao
-import com.ai.assistance.operit.data.dao.CinemaMessageDao
-import com.ai.assistance.operit.data.dao.CoReadingMessageDao
-import com.ai.assistance.operit.data.dao.MomentCommentDao
+import com.ai.assistance.operit.data.dao.TokenUsageDao
 import com.ai.assistance.operit.data.model.ChatEntity
-import com.ai.assistance.operit.data.model.CustomEmojiEntity
-import com.ai.assistance.operit.data.model.SongEntity
-import com.ai.assistance.operit.data.model.MovieEntity
-import com.ai.assistance.operit.data.model.CinemaMessageEntity
-import com.ai.assistance.operit.data.model.CoReadingMessageEntity
-import com.ai.assistance.operit.data.model.MomentEntity
-import com.ai.assistance.operit.data.model.MomentCommentEntity
 import com.ai.assistance.operit.data.model.MessageEntity
 import com.ai.assistance.operit.data.model.MessageVariantEntity
+import com.ai.assistance.operit.data.model.TokenStatsModelEntity
+import com.ai.assistance.operit.data.model.TokenUsageRecordEntity
 /** 应用数据库，包含聊天表和消息表 */
 @Database(
     entities = [
         ChatEntity::class,
         MessageEntity::class,
         MessageVariantEntity::class,
-        CustomEmojiEntity::class,
-        SongEntity::class,
-        MovieEntity::class,
-        CinemaMessageEntity::class,
-        CoReadingMessageEntity::class,
-        MomentEntity::class,
-        MomentCommentEntity::class
+        TokenUsageRecordEntity::class,
+        TokenStatsModelEntity::class,
     ],
-    version = 23,
+    version = 21,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -52,15 +36,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun messageVariantDao(): MessageVariantDao
     abstract fun chatContentDao(): ChatContentDao
-    
-    abstract fun customEmojiDao(): CustomEmojiDao
-    abstract fun momentDao(): MomentDao
-    abstract fun songDao(): SongDao
-    abstract fun movieDao(): MovieDao
-    abstract fun cinemaMessageDao(): CinemaMessageDao
-    abstract fun coReadingMessageDao(): CoReadingMessageDao
-    abstract fun momentCommentDao(): MomentCommentDao
-
+    abstract fun tokenUsageDao(): TokenUsageDao
 
     companion object {
         @Volatile
@@ -356,111 +332,6 @@ abstract class AppDatabase : RoomDatabase() {
                 }
             }
 
-        /** v21 -> v22: Add custom emoji support, remove token statistics (精简功能) */
-        private val MIGRATION_21_22 =
-            object : Migration(21, 22) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    // 创建表情包表
-                    db.execSQL(
-                        """
-                        CREATE TABLE IF NOT EXISTS `custom_emojis` (
-                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                            `imagePath` TEXT NOT NULL,
-                            `category` TEXT NOT NULL DEFAULT 'happy',
-                            `tags` TEXT NOT NULL DEFAULT '',
-                            `useCount` INTEGER NOT NULL DEFAULT 0,
-                            `isFavorite` INTEGER NOT NULL DEFAULT 0,
-                            `addedAt` INTEGER NOT NULL,
-                            `lastUsedAt` INTEGER
-                        )
-                        """.trimIndent()
-                    )
-                    
-                    // 删除Token统计相关表（精简功能）
-                    db.execSQL("DROP TABLE IF EXISTS `token_usage_records`")
-                    db.execSQL("DROP TABLE IF EXISTS `token_stats_models`")
-                }
-            }
-
-        /** v22 -> v23: Add new features - music, cinema, reading, moments */
-        private val MIGRATION_22_23 =
-            object : Migration(22, 23) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    // 创建songs表
-                    db.execSQL("""
-                        CREATE TABLE IF NOT EXISTS songs (
-                            id TEXT PRIMARY KEY NOT NULL,
-                            title TEXT NOT NULL,
-                            artist TEXT NOT NULL,
-                            filePath TEXT NOT NULL,
-                            duration INTEGER NOT NULL,
-                            coverArtPath TEXT
-                        )
-                    """)
-                    
-                    // 创建movies表
-                    db.execSQL("""
-                        CREATE TABLE IF NOT EXISTS movies (
-                            id TEXT PRIMARY KEY NOT NULL,
-                            title TEXT NOT NULL,
-                            filePath TEXT NOT NULL,
-                            duration INTEGER NOT NULL,
-                            thumbnailPath TEXT,
-                            currentPosition INTEGER NOT NULL DEFAULT 0
-                        )
-                    """)
-                    
-                    // 创建cinema_messages表
-                    db.execSQL("""
-                        CREATE TABLE IF NOT EXISTS cinema_messages (
-                            id TEXT PRIMARY KEY NOT NULL,
-                            movieId TEXT NOT NULL,
-                            content TEXT NOT NULL,
-                            authorType TEXT NOT NULL,
-                            timestamp INTEGER NOT NULL
-                        )
-                    """)
-                    
-                    // 创建coreading_messages表
-                    db.execSQL("""
-                        CREATE TABLE IF NOT EXISTS coreading_messages (
-                            id TEXT PRIMARY KEY NOT NULL,
-                            bookId TEXT NOT NULL,
-                            content TEXT NOT NULL,
-                            authorType TEXT NOT NULL,
-                            timestamp INTEGER NOT NULL
-                        )
-                    """)
-                    
-                    // 创建moments表
-                    db.execSQL("""
-                        CREATE TABLE IF NOT EXISTS moments (
-                            id TEXT PRIMARY KEY NOT NULL,
-                            content TEXT NOT NULL,
-                            imageUrls TEXT NOT NULL,
-                            authorType TEXT NOT NULL,
-                            timestamp INTEGER NOT NULL,
-                            isLikedByUser INTEGER NOT NULL DEFAULT 0,
-                            isLikedByAi INTEGER NOT NULL DEFAULT 0
-                        )
-                    """)
-                    
-                    // 创建moment_comments表
-                    db.execSQL("""
-                        CREATE TABLE IF NOT EXISTS moment_comments (
-                            id TEXT PRIMARY KEY NOT NULL,
-                            momentId TEXT NOT NULL,
-                            content TEXT NOT NULL,
-                            authorType TEXT NOT NULL,
-                            replyToCommentId TEXT,
-                            delayMinutes INTEGER NOT NULL DEFAULT 0,
-                            timestamp INTEGER NOT NULL,
-                            isVisible INTEGER NOT NULL DEFAULT 1
-                        )
-                    """)
-                }
-            }
-
         // 定义从版本2到3的迁移
         private val MIGRATION_2_3 =
             object : Migration(2, 3) {
@@ -578,9 +449,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 MIGRATION_17_18,
                                 MIGRATION_18_19,
                                 MIGRATION_19_20,
-                                MIGRATION_20_21,
-                                MIGRATION_21_22,
-                                MIGRATION_22_23
+                                MIGRATION_20_21
                             ) // 添加新的迁移
                             .build()
                     INSTANCE = instance

@@ -368,7 +368,7 @@ fun OperitApp(
         NavItem.AiChat,
         NavItem.AssistantConfig,
         NavItem.Packages,
-        NavItem.MemoryBase,
+        // NavItem.MemoryBase, // Lunaria: memory UI hidden
         NavItem.Toolbox,
         NavItem.ShizukuCommands,
         NavItem.Workflow,

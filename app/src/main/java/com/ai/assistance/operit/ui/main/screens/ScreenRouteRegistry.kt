@@ -125,6 +125,7 @@ object ScreenRouteRegistry {
                 icon = NavItem.AssistantConfig.icon,
                 order = 20
             ),
+            /* Lunaria: memory route hidden
             hostEntryDefinition(
                 entryId = "main.memory_base",
                 screen = Screen.MemoryBase,
@@ -133,6 +134,7 @@ object ScreenRouteRegistry {
                 icon = NavItem.MemoryBase.icon,
                 order = 30
             ),
+            */
             hostEntryDefinition(
                 entryId = "main.packages",
                 screen = Screen.Packages,

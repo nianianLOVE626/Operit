@@ -46,6 +46,9 @@ class MemoryAutoSaveScheduler(
     private val nextRunAtMsByProfileId = ConcurrentHashMap<String, Long>()
 
     fun start() {
+        // Lunaria: memory auto-save disabled
+        AppLogger.d(TAG, "长期记忆自动保存已禁用 (Lunaria)")
+        return
         if (loopJob?.isActive == true) return
         instance = this
         loopJob =

@@ -186,6 +186,13 @@ class MemoryQueryToolExecutor(private val context: Context) : ToolExecutor {
     }
 
     override fun invoke(tool: AITool): ToolResult {
+        // Lunaria: built-in memory disabled, return empty result
+        return ToolResult(
+            toolName = tool.name,
+            success = true,
+            result = StringResultData("Memory system disabled in Lunaria build."),
+            error = null
+        )
         return kotlinx.coroutines.runBlocking {
             return@runBlocking when (tool.name) {
                 "query_memory" -> executeQueryMemory(tool)

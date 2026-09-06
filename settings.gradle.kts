@@ -17,7 +17,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Operit"
+rootProject.name = "Lunaria"
 include(":app")
 include(":dragonbones")
 project(":dragonbones").projectDir = file("avator/dragonbones")

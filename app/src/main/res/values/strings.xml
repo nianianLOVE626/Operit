@@ -6825,4 +6825,6 @@
     <string name="title_activity_data_recovery">Data Recovery</string>
     <string name="toolpkg_widget_host_label">Lunaria Widget</string>
     <string name="toolpkg_widget_picker_title">Select Widget</string>
+    <string name="shortcut_data_recovery">Data Recovery</string>
+    <string name="toolpkg_widget_host_description">Lunaria widget for quick access</string>
 </resources>

@@ -1,8 +1,11 @@
-name: Build APK
+name: Build APK (Disabled - Use android-build.yml instead)
+
+# This workflow is disabled because it doesn't build required native libraries.
+# Use android-build.yml for complete builds.
 
 on:
-  push:
-    branches: [ main, master ]
+  # push:
+  #   branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -10,26 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: 17
-        distribution: temurin
-    
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-    
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug --no-daemon --max-workers=2
-    
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: operit-debug-apk
-        path: app/build/outputs/apk/debug/*.apk
-        retention-days: 30
+    - name: Workflow disabled
+      run: |
+        echo "This workflow is disabled."
+        echo "Please use android-build.yml instead."
+        echo "It includes all required build steps:"
+        echo "  - Native ripgrep library"
+        echo "  - WebChat assets"
+        echo "  - Android dependencies"
+        exit 1

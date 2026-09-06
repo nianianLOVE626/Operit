@@ -38,6 +38,8 @@ on:
       - quickjs/**
       - settings.gradle.kts
       - showerclient/**
+      - terminal/**
+      - terminal
       - tools/native_ripgrep/**
       - tools/packages_whitelist.txt
       - tools/example_packages/sync_example_packages.py
@@ -78,6 +80,14 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
+
+      - name: Initialize terminal submodule
+        shell: bash
+        run: |
+          set -euo pipefail
+          git submodule sync -- terminal
+          git submodule update --init --recursive --depth 1 terminal
+          git submodule status -- terminal
 
       - name: Set up JDK
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
